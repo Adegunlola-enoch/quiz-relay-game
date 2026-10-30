@@ -1,6 +1,6 @@
 {
   "buildCommand": "vite build",
-  "outputDirectory": "dist",
+  "outputDirectory": "client/dist",
   "rewrites": [
     { "source": "/socket.io/:path*", "destination": "/api" },
     { "source": "/(.*)", "destination": "/index.html" }
