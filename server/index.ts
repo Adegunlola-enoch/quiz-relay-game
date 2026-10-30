@@ -7,7 +7,7 @@ import { GameError, GameService } from './game.js';
 import type { Avatar, Category, GameRoom } from './types.js';
 
 const PORT = Number(process.env.PORT ?? 3001);
-const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN ?? 'http://localhost:5173';
+const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN?? 'https://quiz-relay-game.vercel.app';
 const allowedAvatars = new Set<Avatar>(['bolt', 'star', 'rocket', 'heart', 'crown', 'sparkle', 'smile', 'gamepad']);
 
 export function createGameServer() {
