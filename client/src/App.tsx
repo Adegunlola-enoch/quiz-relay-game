@@ -29,26 +29,51 @@ export function App() {
   const [connection, setConnection] = useState<'connecting' | 'connected' | 'offline'>('connecting');
 
   useEffect(() => {
-    // Same-origin works with Vite's local proxy and with the Vercel deployment.
-    const socket = io(undefined, { transports: ['websocket', 'polling'] });
-    socketRef.current = socket;
-    socket.on('connect', () => {
-      setConnection('connected');
-      const saved = readSession();
-      if (saved) socket.emit('room:reconnect', saved);
-    });
-    socket.on('disconnect', () => setConnection('offline'));
-    socket.on('connect_error', () => setConnection('offline'));
-    socket.on('game:error', (message: string) => setNotice(message));
-    socket.on('session:ready', (nextSession: Session) => {
-      localStorage.setItem(storageKey, JSON.stringify(nextSession));
-      setSession(nextSession);
-      setScreen('room');
-      setNotice('');
-    });
-    socket.on('game:state', (nextState: State) => { setState(nextState); setScreen('room'); });
-    return () => { socket.close(); };
-  }, []);
+  // Connect to Render in production and localhost during development.
+  const SOCKET_URL =
+    import.meta.env.VITE_SOCKET_URL || 'http://localhost:3001';
+
+  const socket = io(SOCKET_URL, {
+    transports: ['websocket', 'polling'],
+  });
+
+  socketRef.current = socket;
+
+  socket.on('connect', () => {
+    console.log('Connected to Quiz Relay backend:', socket.id);
+    setConnection('connected');
+
+    const saved = readSession();
+    if (saved) socket.emit('room:reconnect', saved);
+  });
+
+  socket.on('disconnect', () => {
+    setConnection('offline');
+  });
+
+  socket.on('connect_error', (error) => {
+    console.error('Socket connection failed:', error.message);
+    setConnection('offline');
+  });
+
+  socket.on('game:error', (message: string) => setNotice(message));
+
+  socket.on('session:ready', (nextSession: Session) => {
+    localStorage.setItem(storageKey, JSON.stringify(nextSession));
+    setSession(nextSession);
+    setScreen('room');
+    setNotice('');
+  });
+
+  socket.on('game:state', (nextState: State) => {
+    setState(nextState);
+    setScreen('room');
+  });
+
+  return () => {
+    socket.close();
+  };
+}, []);
 
   const submitProfile = (mode: 'create' | 'join') => {
     const socket = socketRef.current;
